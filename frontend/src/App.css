@@ -1,0 +1,191 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- 1. GLOBAL STYLES --- */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f8f9fa; /* Softer, modern grey/white */
+  margin: 0;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+/* Custom Scrollbar (Chrome/Safari/Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* --- 2. AUTHENTICATION PAGES (Register/Login) --- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Premium Deep Blue/Purple mesh gradient */
+  background: radial-gradient(circle at 10% 20%, rgb(192, 193, 200) 0%, rgb(128, 125, 173) 90%);
+  padding: 20px;
+}
+
+.auth-card {
+  display: flex;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  width: 900px;
+  max-width: 100%;
+  animation: slideUp 0.6s ease-out;
+}
+
+.auth-image {
+  flex: 1;
+  /* High-quality lifestyle image */
+  background: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+  display: none; 
+  position: relative;
+}
+
+.auth-image::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+}
+
+.auth-image-text {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  color: white;
+  z-index: 2;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.auth-form-wrapper {
+  flex: 1;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- 3. COMPONENT STYLES --- */
+
+/* Custom Gradient Button */
+.custom-btn {
+  background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.custom-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(24, 40, 72, 0.3);
+}
+
+/* Product Card - Hover Lift Effect */
+.card {
+  border: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden; 
+}
+
+/* Only apply hover effect to product cards (inside Main container) */
+main .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Navbar Tweaks */
+.navbar {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  backdrop-filter: blur(10px); 
+}
+
+/* Badge Styling */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* --- 4. ADMIN DASHBOARD STYLES (NEW) --- */
+
+/* Custom Tabs in Admin Panel */
+.custom-tabs .nav-link {
+  color: #666;
+  font-weight: 600;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 12px 25px;
+  transition: all 0.3s ease;
+  background: transparent !important;
+}
+
+.custom-tabs .nav-link:hover {
+  color: #f7971e; /* Gold Accent on Hover */
+}
+
+.custom-tabs .nav-link.active {
+  color: #182848; /* Dark Blue active text */
+  border-bottom: 3px solid #f7971e; /* Gold Underline */
+  background: transparent !important;
+}
+
+/* Utility Class for Buttons in Tables */
+.hover-shadow {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Table Enhancements */
+.table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* --- 5. RESPONSIVE & ANIMATIONS --- */
+@media (min-width: 768px) {
+  .auth-image {
+    display: block;
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
