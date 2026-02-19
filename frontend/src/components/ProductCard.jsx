@@ -1,12 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaShoppingCart, FaStar, FaHeart } from 'react-icons/fa';
-// --- 1. IMPORT YOUR NEW UTILITY ---
+// IMPORT FaRegHeart (Empty Heart) alongside the solid FaHeart
+import { FaShoppingCart, FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import { formatToINR } from '../utils/currencyUtils'; 
 
 const ProductCard = ({ product }) => {
-  
+  // --- 1. NEW WISHLIST STATE ---
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // Check if item is already in wishlist when page loads
+  useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+    setIsWishlisted(wishlist.some((x) => x._id === product._id));
+  }, [product._id]);
+
+  // --- 2. WISHLIST TOGGLE FUNCTION ---
+  const toggleWishlistHandler = (e) => {
+    e.preventDefault(); // Stops the card from navigating to the product page
+    let wishlist = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+    
+    if (isWishlisted) {
+      // Remove from wishlist
+      wishlist = wishlist.filter((x) => x._id !== product._id);
+    } else {
+      // Add to wishlist
+      wishlist.push(product);
+    }
+
+    localStorage.setItem('wishlistItems', JSON.stringify(wishlist));
+    setIsWishlisted(!isWishlisted);
+    window.dispatchEvent(new Event("storage")); // Updates other pages instantly
+  };
+
   const addToCartHandler = (e) => {
     e.preventDefault();
     let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
@@ -27,12 +53,18 @@ const ProductCard = ({ product }) => {
 
   return (
     <Card 
+      data-aos="fade-up"
       className="my-3 border-0 shadow-sm rounded-4 h-100 hover-lift overflow-hidden position-relative" 
       style={{ transition: 'all 0.3s ease' }}
     >
+      {/* --- 3. UPDATED HEART ICON BUTTON --- */}
       <div className="position-absolute top-0 end-0 p-3" style={{ zIndex: 10 }}>
-          <div className="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center text-muted hover-red" style={{ width: '35px', height: '35px', cursor: 'pointer', transition: '0.2s' }}>
-              <FaHeart size={14} />
+          <div 
+            onClick={toggleWishlistHandler}
+            className="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center text-muted hover-red" 
+            style={{ width: '35px', height: '35px', cursor: 'pointer', transition: '0.2s' }}
+          >
+              {isWishlisted ? <FaHeart color="red" size={16} className="pulse-soft" /> : <FaRegHeart size={16} />}
           </div>
       </div>
 
@@ -68,7 +100,6 @@ const ProductCard = ({ product }) => {
         </div>
 
         <div className="mt-auto d-flex align-items-center justify-content-between">
-          {/* --- 2. USE THE UTILITY FUNCTION HERE --- */}
           <h5 className="mb-0 fw-bold text-primary">{formatToINR(product.price)}</h5>
           
           <Button 

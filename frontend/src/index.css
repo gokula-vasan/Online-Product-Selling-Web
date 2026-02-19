@@ -59,7 +59,60 @@ html {
 }
 
 /* =========================================
-   2. ANIMATION UTILITIES
+   2. UNIQUE PAGE BACKGROUNDS & HERO (NEW)
+   ========================================= */
+
+/* 1. Home Page: Soft Animated Mesh Gradient */
+.page-bg-home {
+  background: linear-gradient(-45deg, #fbc2eb, #e0c3fc, #8ec5fc, #e0c3fc);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  min-height: 100vh;
+}
+
+/* 2. Cart Page: Cool Mint & Ocean Blue */
+.page-bg-cart {
+  background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+  min-height: 100vh;
+}
+
+/* 3. Product Page: Elegant Minimalist Glow */
+.page-bg-product {
+  background: radial-gradient(circle at 50% 0%, #ffffff 0%, #e0e5ec 100%);
+  min-height: 100vh;
+}
+
+/* 4. Profile Page: Deep Professional Gradient */
+.page-bg-profile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* 5. Admin Dashboard: Clean Glass Tech */
+.page-bg-admin {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+/* Hero Section Image Overlay */
+.hero-section {
+  background: linear-gradient(rgba(30, 60, 114, 0.85), rgba(42, 82, 152, 0.85)), 
+              url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.shadow-text {
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+.backdrop-blur {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* =========================================
+   3. ANIMATION UTILITIES
    ========================================= */
 
 /* General Fade In */
@@ -96,19 +149,28 @@ html {
   transform: scale(1.05);
 }
 
-/* Home Page Staggered Animation */
-.product-fade-in {
-  animation: slideUp 0.6s ease-out forwards;
-  opacity: 0; /* Hidden by default */
+/* Continuous Soft Pulse */
+.pulse-soft {
+  animation: softPulse 2s infinite;
+}
+@keyframes softPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-/* Hero Text Animation */
-.hero-animate {
-  animation: slideUp 1s ease-out forwards;
+/* Floating Animation */
+.floating, .float-element {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 /* =========================================
-   3. AUTHENTICATION PAGES (Login/Register)
+   4. AUTHENTICATION PAGES (Login/Register)
    ========================================= */
 
 /* Animated Gradient Background */
@@ -199,7 +261,7 @@ html {
 }
 
 /* =========================================
-   4. COMPONENT STYLES
+   5. COMPONENT STYLES
    ========================================= */
 
 /* Inputs */
@@ -273,7 +335,7 @@ html {
 }
 
 /* =========================================
-   5. ADMIN DASHBOARD STYLES
+   6. ADMIN DASHBOARD STYLES
    ========================================= */
 .custom-tabs .nav-link {
   color: var(--text-light);
@@ -315,7 +377,7 @@ html {
 }
 
 /* =========================================
-   6. MEDIA QUERIES
+   7. MEDIA QUERIES
    ========================================= */
 @media (min-width: 992px) {
   .auth-image {

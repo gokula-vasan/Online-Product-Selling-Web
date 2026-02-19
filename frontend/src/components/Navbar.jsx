@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar, Nav, Container, Badge, NavDropdown, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaUser, FaStore, FaUserShield, FaSignOutAlt, FaBars } from 'react-icons/fa';
+// IMPORTED FaHeart HERE
+import { FaShoppingCart, FaUser, FaStore, FaUserShield, FaSignOutAlt, FaBars, FaHeart } from 'react-icons/fa';
 
 const Navigation = () => {
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0); // NEW: Wishlist count state
   const [userInfo, setUserInfo] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
-  
+  // Scroll effect for Navbar styling
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -22,15 +24,20 @@ const Navigation = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  
+  // Update counts from localStorage
   useEffect(() => {
     const updateState = () => {
       const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+      const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems')) || []; // Read wishlist
       const user = JSON.parse(localStorage.getItem('userInfo'));
-      const count = cartItems.reduce((acc, item) => acc + Number(item.qty), 0);
-      setCartCount(count);
+      
+      const cCount = cartItems.reduce((acc, item) => acc + Number(item.qty), 0);
+      
+      setCartCount(cCount);
+      setWishlistCount(wishlistItems.length); // Update wishlist count
       setUserInfo(user);
     };
+    
     updateState();
     window.addEventListener('storage', updateState);
     return () => window.removeEventListener('storage', updateState);
@@ -46,7 +53,6 @@ const Navigation = () => {
     <Navbar 
       expand="lg" 
       fixed="top"
-     
       className={`py-1 transition-all ${scrolled ? 'shadow-lg' : ''}`}
       style={{ 
         background: scrolled ? 'rgba(15, 32, 39, 0.95)' : 'rgba(15, 32, 39, 0.9)', 
@@ -79,13 +85,29 @@ const Navigation = () => {
               </Nav.Link>
             )}
 
+            {/* --- NEW: WISHLIST ICON --- */}
+            <Nav.Link as={Link} to="/wishlist" className="position-relative text-white opacity-75 hover-opacity-100">
+              <FaHeart size={20} className={wishlistCount > 0 ? "text-danger pulse-soft" : ""} />
+              {wishlistCount > 0 && (
+                <Badge 
+                  bg="danger" 
+                  text="white" 
+                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center shadow-sm"
+                  style={{ width: '18px', height: '18px', fontSize: '0.7rem' }}
+                >
+                  {wishlistCount}
+                </Badge>
+              )}
+            </Nav.Link>
+
+            {/* --- CART ICON --- */}
             <Nav.Link as={Link} to="/card" className="position-relative text-white opacity-75 hover-opacity-100">
               <FaShoppingCart size={20} />
               {cartCount > 0 && (
                 <Badge 
                   bg="warning" 
                   text="dark" 
-                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center"
+                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center shadow-sm"
                   style={{ width: '18px', height: '18px', fontSize: '0.7rem' }}
                 >
                   {cartCount}
@@ -93,6 +115,7 @@ const Navigation = () => {
               )}
             </Nav.Link>
 
+            {/* --- USER PROFILE DROPDOWN --- */}
             {userInfo ? (
               <NavDropdown 
                 title={
