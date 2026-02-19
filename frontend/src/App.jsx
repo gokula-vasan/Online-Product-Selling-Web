@@ -32,11 +32,7 @@ function App() {
       {/* Wrapper for Sticky Footer */}
       <div className="d-flex flex-column min-vh-100">
         <Navbar />
-        
-        {/* REMOVED 'container' class from main:
-            This allows the Home Banner and Auth pages to be Full Width.
-            Individual pages (like ProfilePage) use <Container> internally where needed.
-        */}
+       
         <main className="flex-grow-1">
           <Routes>
             {/* Public Routes */}

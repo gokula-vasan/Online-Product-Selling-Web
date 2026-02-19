@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, ListGroup, Image, Button, Card, Container, Spinner } from 'react-bootstrap';
+import { Row, Col, ListGroup, Image, Button, Card, Container, Spinner, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaTrash, FaPlus, FaMinus, FaArrowLeft, FaShoppingBag, FaLock } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaMinus, FaArrowLeft, FaShoppingBag, FaLock, FaCreditCard, FaTruck } from 'react-icons/fa';
 import api from '../services/api';
+import { formatToINR } from '../utils/currencyUtils';
 
 const CardPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -11,17 +12,13 @@ const CardPage = () => {
 
   useEffect(() => {
     const items = JSON.parse(localStorage.getItem('cartItems')) || [];
-    // Ensure quantity exists
     const itemsWithQty = items.map(item => ({ ...item, qty: item.qty || 1 }));
     setCartItems(itemsWithQty);
   }, []);
 
-  // Helper to update state, local storage, AND notify Navbar
   const updateCart = (newItems) => {
     setCartItems(newItems);
     localStorage.setItem('cartItems', JSON.stringify(newItems));
-    
-    // This event forces the Navbar to update the red badge instantly
     window.dispatchEvent(new Event("storage"));
   };
 
@@ -34,8 +31,6 @@ const CardPage = () => {
     const newItems = [...cartItems];
     const currentItem = newItems[index];
     const newQty = currentItem.qty + delta;
-    
-    // Check Stock Limit
     const maxStock = currentItem.countInStock || 10; 
 
     if (newQty > 0 && newQty <= maxStock) {
@@ -46,15 +41,12 @@ const CardPage = () => {
     }
   };
 
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0).toFixed(2);
+  const baseTotalPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
   const totalItems = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
-  // --- UPDATED: REAL CHECKOUT LOGIC WITH FIX ---
   const checkoutHandler = async () => {
-    // 1. Get User Info
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     
-    // 2. Check if Logged In
     if (!userInfo) {
         alert("Please Sign In to Place an Order");
         navigate('/login?redirect=card');
@@ -63,44 +55,32 @@ const CardPage = () => {
 
     try {
         setLoadingCheckout(true);
-
-        // 3. Prepare API Header with Token
         const config = {
-            headers: {
-                Authorization: `Bearer ${userInfo.token}`,
-            },
+            headers: { Authorization: `Bearer ${userInfo.token}` },
         };
 
-        // 4. Prepare Order Data (FIX: Map '_id' to 'product')
-        // The backend expects the ID to be named 'product'
         const orderItemsToSend = cartItems.map(item => ({
             name: item.name,
             qty: item.qty,
             image: item.image,
-            price: item.price,
-            product: item._id  // <--- THIS IS THE CRITICAL FIX
+            price: Number(item.price), // Sending the raw INR price
+            product: item._id 
         }));
 
         const orderData = {
             orderItems: orderItemsToSend,
-            totalPrice: Number(totalPrice)
+            totalPrice: baseTotalPrice // Sending the raw INR total
         };
 
-        // 5. Send to Backend
         await api.post('/orders', orderData, config);
 
         alert('Order Placed Successfully!');
-        
-        // 6. Clear Cart & Redirect
         updateCart([]); 
         navigate('/profile'); 
 
     } catch (error) {
         console.error("Order Error:", error);
-        // Show the actual error message from the backend if available
-        const errorMsg = error.response && error.response.data.message 
-            ? error.response.data.message 
-            : error.message;
+        const errorMsg = error.response && error.response.data.message ? error.response.data.message : error.message;
         alert(`Failed to place order: ${errorMsg}`);
     } finally {
         setLoadingCheckout(false);
@@ -108,134 +88,152 @@ const CardPage = () => {
   };
 
   return (
-    <Container className="py-5">
-      <h2 className="mb-4 fw-bold">Shopping Cart</h2>
-      
-      <Row>
-        {/* LEFT SIDE: Cart Items */}
-        <Col md={8}>
-          {cartItems.length === 0 ? (
-            <div className="text-center py-5 bg-light rounded shadow-sm border">
-                <FaShoppingBag size={60} className="text-secondary mb-3" />
-                <h3 className="fw-bold text-dark">Your cart is empty</h3>
-                <p className="text-muted">Looks like you haven't added anything yet.</p>
-                <Link to="/" className="btn btn-warning text-white px-4 py-2 mt-2 fw-bold">
-                    <FaArrowLeft className="me-2" /> Start Shopping
-                </Link>
-            </div>
-          ) : (
-            <ListGroup variant="flush">
-              {cartItems.map((item, index) => (
-                <ListGroup.Item key={index} className="mb-3 shadow-sm rounded border p-3 bg-white">
-                  <Row className="align-items-center">
-                    {/* Image */}
-                    <Col md={2}>
-                      <Image 
-                        src={item.image} 
-                        alt={item.name} 
-                        fluid 
-                        rounded 
-                        style={{ height: '100px', width: '100px', objectFit: 'contain', border: '1px solid #eee' }} 
-                      />
-                    </Col>
-                    
-                    {/* Name & Details */}
-                    <Col md={4}>
-                      <Link to={`/product/${item._id}`} className="text-decoration-none text-dark">
-                        <h5 className="fw-bold mb-1">{item.name}</h5>
-                      </Link>
-                      <p className="text-muted small mb-1">{item.category}</p>
-                      {item.countInStock > 0 ? (
-                        <span className="text-success small fw-bold">In Stock</span>
-                      ) : (
-                        <span className="text-danger small fw-bold">Out of Stock</span>
-                      )}
-                    </Col>
-                    
-                    {/* Price */}
-                    <Col md={2}>
-                        <h5 className="mb-0 text-dark fw-bold">${item.price}</h5>
-                    </Col>
-                    
-                    {/* Quantity Controls */}
-                    <Col md={3} className="d-flex align-items-center justify-content-between" style={{ maxWidth: '140px'}}>
-                        <Button variant="outline-dark" size="sm" className="rounded-circle" onClick={() => changeQty(index, -1)} style={{ width: '32px', height: '32px' }}>
-                            <FaMinus size={10} />
-                        </Button>
-                        <span className="fw-bold mx-2" style={{ fontSize: '1.1rem' }}>{item.qty}</span>
-                        <Button variant="outline-dark" size="sm" className="rounded-circle" onClick={() => changeQty(index, 1)} style={{ width: '32px', height: '32px' }}>
-                            <FaPlus size={10} />
-                        </Button>
-                    </Col>
+    <div className="auth-wrapper" style={{ alignItems: 'flex-start', paddingTop: '6rem', paddingBottom: '4rem', height: 'auto', minHeight: '100vh' }}>
+      <Container className="fade-in">
+        
+        <div className="d-flex align-items-center mb-5">
+             <div className="me-3 p-3 rounded-circle bg-white shadow-sm text-primary">
+                 <FaShoppingBag size={30} />
+             </div>
+             <div>
+                 <h2 className="fw-bold mb-0 text-white">Shopping Bag</h2>
+                 <p className="mb-0 text-white-50">{totalItems} items in your cart</p>
+             </div>
+        </div>
+        
+        <Row className="g-4">
+          
+          <Col lg={8}>
+            {cartItems.length === 0 ? (
+              <Card className="text-center py-5 border-0 shadow-lg" style={{ borderRadius: '20px' }}>
+                  <Card.Body>
+                    <div className="mb-3 text-muted opacity-25"><FaShoppingBag size={80} /></div>
+                    <h3 className="fw-bold text-dark">Your cart is empty</h3>
+                    <p className="text-muted mb-4">Looks like you haven't added anything yet.</p>
+                    <Link to="/" className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm custom-btn border-0 text-white">
+                        <FaArrowLeft className="me-2" /> Start Shopping
+                    </Link>
+                  </Card.Body>
+              </Card>
+            ) : (
+              <div className="d-flex flex-column gap-3">
+                {cartItems.map((item, index) => (
+                  <Card key={index} className="border-0 shadow-sm hover-lift" style={{ borderRadius: '15px', overflow: 'hidden' }}>
+                    <Card.Body className="p-3">
+                      <Row className="align-items-center">
+                        
+                        <Col xs={3} sm={2}>
+                          <div className="bg-light rounded p-2 text-center d-flex align-items-center justify-content-center" style={{ height: '80px' }}>
+                              <Image 
+                                src={item.image} 
+                                alt={item.name} 
+                                fluid 
+                                style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} 
+                              />
+                          </div>
+                        </Col>
+                        
+                        <Col xs={9} sm={4}>
+                          <Link to={`/product/${item._id}`} className="text-decoration-none text-dark">
+                            <h6 className="fw-bold mb-1 text-truncate">{item.name}</h6>
+                          </Link>
+                          <div className="small text-muted mb-1">{item.category || 'General'}</div>
+                          {item.countInStock > 0 ? (
+                            <Badge bg="success" className="fw-normal">In Stock</Badge>
+                          ) : (
+                            <Badge bg="danger" className="fw-normal">Out of Stock</Badge>
+                          )}
+                        </Col>
+                        
+                        <Col xs={6} sm={3} className="mt-3 mt-sm-0">
+                            <div className="d-flex align-items-center bg-light rounded-pill p-1 border" style={{ width: 'fit-content' }}>
+                                <Button variant="link" size="sm" className="text-dark p-0 px-2" onClick={() => changeQty(index, -1)}>
+                                    <FaMinus size={10} />
+                                </Button>
+                                <span className="fw-bold mx-2 small">{item.qty}</span>
+                                <Button variant="link" size="sm" className="text-dark p-0 px-2" onClick={() => changeQty(index, 1)}>
+                                    <FaPlus size={10} />
+                                </Button>
+                            </div>
+                        </Col>
 
-                    {/* Remove Button */}
-                    <Col md={1} className="text-end">
-                      <Button variant="light" className="text-danger border-0 hover-shadow" onClick={() => removeFromCart(index)}>
-                        <FaTrash size={18} />
-                      </Button>
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          )}
-        </Col>
+                        <Col xs={6} sm={3} className="text-end mt-3 mt-sm-0">
+                            <h5 className="fw-bold mb-0 text-primary">{formatToINR(item.price * item.qty)}</h5>
+                            <small className="text-muted d-block mb-1">{formatToINR(item.price)} / each</small>
+                            <Button variant="link" className="text-danger p-0 small text-decoration-none" onClick={() => removeFromCart(index)}>
+                                <FaTrash size={12} className="me-1" /> Remove
+                            </Button>
+                        </Col>
+                      </Row>
+                    </Card.Body>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Col>
 
-        {/* RIGHT SIDE: Order Summary */}
-        <Col md={4}>
-          <Card className="shadow-sm border-0 sticky-top" style={{ top: '100px' }}>
-            <Card.Header className="bg-white border-bottom pt-4 pb-3">
-                <h4 className="fw-bold mb-0">Order Summary</h4>
-            </Card.Header>
-            <ListGroup variant="flush">
-              <ListGroup.Item className="border-0 d-flex justify-content-between align-items-center mt-2">
-                 <span className="text-muted">Items ({totalItems})</span>
-                 <span className="fw-bold">${totalPrice}</span>
-              </ListGroup.Item>
-              <ListGroup.Item className="border-0 d-flex justify-content-between align-items-center">
-                 <span className="text-muted">Shipping</span>
-                 <span className="text-success fw-bold">Free</span>
-              </ListGroup.Item>
-              <ListGroup.Item className="border-0 d-flex justify-content-between align-items-center">
-                 <span className="text-muted">Tax</span>
-                 <span className="fw-bold">$0.00</span>
-              </ListGroup.Item>
-              
-              <hr className="mx-3 my-2" />
+          <Col lg={4}>
+            <Card className="border-0 shadow-lg sticky-top" style={{ top: '100px', borderRadius: '20px', overflow: 'hidden' }}>
+              <div className="bg-light p-4 border-bottom">
+                  <h5 className="fw-bold mb-0 text-dark">Order Summary</h5>
+              </div>
+              <Card.Body className="p-4 bg-white">
+                <ListGroup variant="flush">
+                  <ListGroup.Item className="border-0 px-0 d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Subtotal ({totalItems} items)</span>
+                      <span className="fw-bold">{formatToINR(baseTotalPrice)}</span>
+                  </ListGroup.Item>
+                  <ListGroup.Item className="border-0 px-0 d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Shipping</span>
+                      <span className="text-success fw-bold">Free</span>
+                  </ListGroup.Item>
+                  <ListGroup.Item className="border-0 px-0 d-flex justify-content-between align-items-center">
+                      <span className="text-muted">Tax Estimate</span>
+                      <span className="fw-bold">{formatToINR(0)}</span>
+                  </ListGroup.Item>
+                  
+                  <hr className="my-3 opacity-10" />
 
-              <ListGroup.Item className="border-0 d-flex justify-content-between align-items-center">
-                 <h5 className="fw-bold">Total Amount</h5>
-                 <h4 className="fw-bold text-primary">${totalPrice}</h4>
-              </ListGroup.Item>
-              
-              <ListGroup.Item className="pb-4 border-0">
-                <Button 
-                    type="button" 
-                    className="w-100 btn-warning text-white fw-bold py-3 shadow-sm" 
-                    disabled={cartItems.length === 0 || loadingCheckout} 
-                    onClick={checkoutHandler}
-                    style={{ fontSize: '1.1rem' }}
-                >
-                  {loadingCheckout ? (
-                    <>
-                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                        Processing...
-                    </>
-                  ) : (
-                    <>
-                        <FaLock className="me-2" /> Place Order
-                    </>
-                  )}
-                </Button>
-                <div className="text-center mt-3 small text-muted">
-                    <FaLock className="me-1" /> Secure Checkout
-                </div>
-              </ListGroup.Item>
-            </ListGroup>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                  <ListGroup.Item className="border-0 px-0 d-flex justify-content-between align-items-center mb-4">
+                      <h5 className="fw-bold mb-0">Total</h5>
+                      <h4 className="fw-bold text-primary mb-0">{formatToINR(baseTotalPrice)}</h4>
+                  </ListGroup.Item>
+                  
+                  <Button 
+                      className="w-100 custom-btn text-white fw-bold py-3 shadow-sm border-0 d-flex align-items-center justify-content-center" 
+                      disabled={cartItems.length === 0 || loadingCheckout} 
+                      onClick={checkoutHandler}
+                      style={{ borderRadius: '12px', background: 'linear-gradient(to right, #1e3c72, #2a5298)' }}
+                  >
+                    {loadingCheckout ? (
+                      <>
+                          <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                          Processing...
+                      </>
+                    ) : (
+                      <>
+                          <FaLock className="me-2" /> Checkout Now
+                      </>
+                    )}
+                  </Button>
+                  
+                  <div className="mt-4 pt-3 border-top">
+                      <div className="d-flex align-items-center justify-content-center gap-3 text-muted opacity-50">
+                          <FaCreditCard size={24} />
+                          <FaLock size={20} />
+                          <FaTruck size={24} />
+                      </div>
+                      <p className="text-center text-muted small mt-2 mb-0">Secure Checkout • Free Shipping • Easy Returns</p>
+                  </div>
+
+                </ListGroup>
+              </Card.Body>
+            </Card>
+          </Col>
+
+        </Row>
+      </Container>
+    </div>
   );
 };
 

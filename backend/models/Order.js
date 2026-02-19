@@ -19,7 +19,7 @@ const orderSchema = mongoose.Schema({
             },
         }
     ],
-    // Added Shipping Address (Optional for now so your test doesn't break)
+    
     shippingAddress: {
         address: { type: String },
         city: { type: String },
@@ -42,7 +42,7 @@ const orderSchema = mongoose.Schema({
         default: false
     },
     paidAt: {
-        type: Date // Tracks exactly when payment happened
+        type: Date
     },
     isDelivered: {
         type: Boolean,
@@ -50,10 +50,10 @@ const orderSchema = mongoose.Schema({
         default: false
     },
     deliveredAt: {
-        type: Date // Tracks exactly when delivery happened
+        type: Date 
     },
 }, {
-    timestamps: true // Automatically creates 'createdAt' and 'updatedAt'
+    timestamps: true 
 });
 
 const Order = mongoose.model('Order', orderSchema);

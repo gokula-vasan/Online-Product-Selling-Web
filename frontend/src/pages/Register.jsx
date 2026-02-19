@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { FaUser, FaEnvelope, FaLock, FaGoogle, FaUserPlus } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaUserPlus } from 'react-icons/fa'; // Removed FaGoogle
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -18,7 +18,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // 1. Client-side Validation
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -29,13 +28,10 @@ const Register = () => {
     try {
       const { data } = await api.post('/users/register', { name, email, password });
       
-      // Save user to storage
       localStorage.setItem('userInfo', JSON.stringify(data));
       
-      // 2. Force Navbar to update instantly
       window.dispatchEvent(new Event("storage"));
       
-      // 3. Smooth Redirect
       navigate('/');
       
     } catch (err) {
@@ -49,7 +45,7 @@ const Register = () => {
     <div className="auth-container">
       <div className="auth-card">
         
-        {/* Left Side - Image Section */}
+        {/* Left Side Image */}
         <div className="auth-image" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
           <div className="auth-image-text">
             <h2>Join EliteShop</h2>
@@ -57,7 +53,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Right Side - Form Section */}
+        {/* Right Side Form */}
         <div className="auth-form-wrapper">
           <div className="text-center mb-4">
             <h2 style={{ fontWeight: 'bold', color: '#333' }}>Create Account</h2>
@@ -68,7 +64,7 @@ const Register = () => {
 
           <Form onSubmit={submitHandler}>
             
-            {/* Name Input */}
+            {/* Full Name Input */}
             <Form.Group className="mb-3 position-relative">
               <Form.Control 
                 type="text" 
@@ -107,7 +103,7 @@ const Register = () => {
               <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
             </Form.Group>
 
-            {/* Confirm Password Input (New) */}
+            {/* Confirm Password Input */}
             <Form.Group className="mb-3 position-relative">
               <Form.Control 
                 type="password" 
@@ -120,7 +116,7 @@ const Register = () => {
               <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
             </Form.Group>
 
-            {/* Terms Checkbox */}
+            {/* Terms & Conditions Checkbox */}
             <Form.Group className="mb-4">
               <Form.Check 
                 required
@@ -130,6 +126,7 @@ const Register = () => {
               />
             </Form.Group>
 
+            {/* Submit Button */}
             <Button 
               variant="primary" 
               type="submit" 
@@ -147,17 +144,8 @@ const Register = () => {
             </Button>
           </Form>
 
-          <div className="d-flex align-items-center my-4">
-            <hr className="flex-grow-1" />
-            <span className="mx-2 text-muted">OR</span>
-            <hr className="flex-grow-1" />
-          </div>
-
-          <Button variant="outline-dark" className="w-100 rounded-pill mb-3 d-flex align-items-center justify-content-center">
-            <FaGoogle className="me-2" /> Sign up with Google
-          </Button>
-
-          <div className="text-center mt-3">
+          {/* Already have an account link */}
+          <div className="text-center mt-4">
             <p className="text-muted">Already have an account? <Link to="/login" style={{ color: '#764ba2', fontWeight: 'bold' }}>Log In</Link></p>
           </div>
         </div>

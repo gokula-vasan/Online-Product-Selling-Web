@@ -1,23 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { Navbar, Nav, Container, Badge, NavDropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, Badge, NavDropdown, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaShoppingCart, FaUser, FaStore, FaUserShield } from 'react-icons/fa'; // Added FaUserShield
+import { FaShoppingCart, FaUser, FaStore, FaUserShield, FaSignOutAlt, FaBars } from 'react-icons/fa';
 
 const Navigation = () => {
   const [cartCount, setCartCount] = useState(0);
   const [userInfo, setUserInfo] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  
   useEffect(() => {
     const updateState = () => {
       const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
       const user = JSON.parse(localStorage.getItem('userInfo'));
       const count = cartItems.reduce((acc, item) => acc + Number(item.qty), 0);
-      
       setCartCount(count);
       setUserInfo(user);
     };
-
     updateState();
     window.addEventListener('storage', updateState);
     return () => window.removeEventListener('storage', updateState);
@@ -30,57 +43,77 @@ const Navigation = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect className="py-3 sticky-top">
+    <Navbar 
+      expand="lg" 
+      fixed="top"
+     
+      className={`py-1 transition-all ${scrolled ? 'shadow-lg' : ''}`}
+      style={{ 
+        background: scrolled ? 'rgba(15, 32, 39, 0.95)' : 'rgba(15, 32, 39, 0.9)', 
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s ease',
+        borderBottom: '1px solid rgba(255,255,255,0.1)'
+      }}
+      variant="dark"
+    >
       <Container>
-        <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center">
-          <FaStore className="me-2 text-warning" size={24} />
-          <span>EliteShop</span>
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center fw-bold fs-5">
+          <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: '32px', height: '32px' }}>
+             <FaStore className="text-primary" size={16} />
+          </div>
+          <span className="text-white">EliteShop</span>
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 text-white shadow-none">
+            <FaBars size={20} />
+        </Navbar.Toggle>
+
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto align-items-center">
+          <Nav className="ms-auto align-items-center gap-3">
             
-            {/* 1. CART LINK */}
-            <Nav.Link as={Link} to="/card" className="me-3 position-relative">
-              <FaShoppingCart size={20} /> Cart
+            {userInfo && (
+              <Nav.Link as={Link} to="/admin" className="text-decoration-none">
+                 <Button variant="outline-danger" size="sm" className="d-flex align-items-center fw-bold rounded-pill px-3 py-1" style={{ fontSize: '0.8rem' }}>
+                    <FaUserShield className="me-2" /> Admin
+                 </Button>
+              </Nav.Link>
+            )}
+
+            <Nav.Link as={Link} to="/card" className="position-relative text-white opacity-75 hover-opacity-100">
+              <FaShoppingCart size={20} />
               {cartCount > 0 && (
-                <Badge bg="warning" text="dark" className="position-absolute top-0 start-100 translate-middle rounded-circle">
+                <Badge 
+                  bg="warning" 
+                  text="dark" 
+                  className="position-absolute top-0 start-100 translate-middle rounded-circle border border-dark d-flex align-items-center justify-content-center"
+                  style={{ width: '18px', height: '18px', fontSize: '0.7rem' }}
+                >
                   {cartCount}
                 </Badge>
               )}
             </Nav.Link>
 
-            {/* 2. ADMIN LINK (Now visible directly on the Navbar) */}
-            {/* We show this if the user is logged in. 
-                (In a real app, you'd check userInfo.isAdmin) */}
-            {userInfo && (
-              <Nav.Link 
-                as={Link} 
-                to="/admin" 
-                className="me-3 fw-bold text-danger d-flex align-items-center"
-              >
-                <FaUserShield className="me-1" size={18} /> Admin
-              </Nav.Link>
-            )}
-
-            {/* 3. USER DROPDOWN */}
             {userInfo ? (
-              <NavDropdown title={<><FaUser className="me-1"/> {userInfo.name}</>} id="username">
-                <NavDropdown.Item as={Link} to="/profile">
-                  User Profile
-                </NavDropdown.Item>
-
+              <NavDropdown 
+                title={
+                  <div className="d-flex align-items-center text-white">
+                    <div className="border border-secondary rounded-circle p-1 me-2 d-flex align-items-center justify-content-center" style={{ width: '30px', height: '30px' }}>
+                        <FaUser size={14} />
+                    </div>
+                    <span className="fw-semibold small">{userInfo.name.split(' ')[0]}</span>
+                  </div>
+                } 
+                id="username"
+                align="end"
+              >
+                <NavDropdown.Item as={Link} to="/profile" className="small">User Profile</NavDropdown.Item>
                 <NavDropdown.Divider />
-                
-                <NavDropdown.Item onClick={logoutHandler} className="text-danger">
-                  Logout
-                </NavDropdown.Item>
+                <NavDropdown.Item onClick={logoutHandler} className="text-danger small fw-bold">Logout</NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link as={Link} to="/login">
-                <FaUser className="me-1" /> Sign In
-              </Nav.Link>
+              <Link to="/login">
+                <Button variant="primary" size="sm" className="fw-bold px-4 rounded-pill custom-btn border-0 shadow-sm">Sign In</Button>
+              </Link>
             )}
 
           </Nav>

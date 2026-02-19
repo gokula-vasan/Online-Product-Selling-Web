@@ -1,7 +1,6 @@
 const Order = require('../models/Order');
 
-// @desc    Create new order
-// @route   POST /api/orders
+
 const addOrderItems = async (req, res) => {
     const { orderItems, totalPrice } = req.body;
 
@@ -13,9 +12,9 @@ const addOrderItems = async (req, res) => {
             user: req.user._id,
             orderItems,
             totalPrice,
-            isPaid: true, // Auto-mark as paid for demo purposes
+            isPaid: true, 
             paidAt: Date.now(),
-            paymentMethod: 'Card' // Default value
+            paymentMethod: 'Card' 
         });
 
         const createdOrder = await order.save();
@@ -23,11 +22,10 @@ const addOrderItems = async (req, res) => {
     }
 };
 
-// @desc    Get all orders (Admin)
-// @route   GET /api/orders
+
 const getOrders = async (req, res) => {
     try {
-        // .populate() replaces the User ID with the actual User Name/ID
+      
         const orders = await Order.find({}).populate('user', 'id name');
         res.json(orders);
     } catch (error) {
@@ -35,8 +33,7 @@ const getOrders = async (req, res) => {
     }
 };
 
-// @desc    Get logged in user orders
-// @route   GET /api/orders/myorders
+
 const getMyOrders = async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id });
@@ -46,9 +43,7 @@ const getMyOrders = async (req, res) => {
     }
 };
 
-// @desc    Update order to delivered
-// @route   PUT /api/orders/:id/deliver
-// --- THIS IS THE NEW FUNCTION ---
+
 const updateOrderToDelivered = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -71,5 +66,5 @@ module.exports = {
     addOrderItems, 
     getOrders, 
     getMyOrders, 
-    updateOrderToDelivered // <--- Export the new function
+    updateOrderToDelivered 
 };

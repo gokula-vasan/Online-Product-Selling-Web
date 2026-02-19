@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
-import { FaEnvelope, FaLock, FaGoogle, FaSignInAlt } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaSignInAlt } from 'react-icons/fa'; // Removed FaGoogle
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +12,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Handle redirect after login (e.g., if user came from Cart)
   const redirect = location.search ? location.search.split('=')[1] : '/';
 
   const submitHandler = async (e) => {
@@ -23,13 +22,10 @@ const Login = () => {
     try {
       const { data } = await api.post('/users/login', { email, password });
       
-      // Save user to storage
       localStorage.setItem('userInfo', JSON.stringify(data));
       
-      // 1. Force Navbar to update immediately without page reload
       window.dispatchEvent(new Event("storage"));
 
-      // 2. Navigate smoothly to Home or previous page
       navigate(redirect);
       
     } catch (err) {
@@ -43,7 +39,7 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-card">
         
-        {/* Left Side - Image Section */}
+        {/* Left Side Image */}
         <div className="auth-image" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1570857502809-08184874388e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
           <div className="auth-image-text">
             <h2>Welcome Back!</h2>
@@ -51,7 +47,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Side - Form Section */}
+        {/* Right Side Form */}
         <div className="auth-form-wrapper">
           <div className="text-center mb-4">
             <h2 style={{ fontWeight: 'bold', color: '#333' }}>Sign In</h2>
@@ -88,19 +84,17 @@ const Login = () => {
               <FaLock style={{ position: 'absolute', top: '18px', left: '15px', color: '#aaa' }} />
             </Form.Group>
 
-            {/* Remember Me & Forgot Password Row */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            {/* Remember Me Checkbox */}
+            <div className="mb-4">
               <Form.Check 
                 type="checkbox" 
                 label="Remember me" 
                 id="custom-checkbox"
                 className="text-muted small"
               />
-              <Link to="/forgot-password" style={{ textDecoration: 'none', fontSize: '0.9rem', color: '#764ba2' }}>
-                Forgot Password?
-              </Link>
             </div>
 
+            {/* Sign In Button */}
             <Button 
               variant="primary" 
               type="submit" 
@@ -118,17 +112,8 @@ const Login = () => {
             </Button>
           </Form>
 
-          <div className="d-flex align-items-center my-4">
-            <hr className="flex-grow-1" />
-            <span className="mx-2 text-muted">OR</span>
-            <hr className="flex-grow-1" />
-          </div>
-
-          <Button variant="outline-dark" className="w-100 rounded-pill mb-3 d-flex align-items-center justify-content-center">
-            <FaGoogle className="me-2" /> Sign in with Google
-          </Button>
-
-          <div className="text-center mt-3">
+          {/* New Customer Registration Link */}
+          <div className="text-center mt-4">
             <p className="text-muted">
               New Customer? <Link to="/register" style={{ color: '#764ba2', fontWeight: 'bold' }}>Create an Account</Link>
             </p>

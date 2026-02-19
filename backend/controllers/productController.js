@@ -1,7 +1,6 @@
 const Product = require('../models/Product');
 
-// @desc    Fetch all products
-// @route   GET /api/products
+
 const getProducts = async (req, res) => {
     try {
         const products = await Product.find({});
@@ -11,8 +10,7 @@ const getProducts = async (req, res) => {
     }
 };
 
-// @desc    Fetch single product
-// @route   GET /api/products/:id
+
 const getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -27,8 +25,7 @@ const getProductById = async (req, res) => {
     }
 };
 
-// @desc    Create a product
-// @route   POST /api/products
+
 const createProduct = async (req, res) => {
     try {
         const { name, description, price, category, image, countInStock } = req.body;
@@ -42,9 +39,7 @@ const createProduct = async (req, res) => {
     }
 };
 
-// @desc    Update a product
-// @route   PUT /api/products/:id
-// --- NEW FUNCTION TO ENABLE EDITING ---
+
 const updateProduct = async (req, res) => {
     try {
         const { name, price, description, image, category, countInStock } = req.body;
@@ -52,13 +47,13 @@ const updateProduct = async (req, res) => {
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            // Update fields if they exist in the request, otherwise keep old value
+          
             product.name = name || product.name;
             product.price = price || product.price;
             product.description = description || product.description;
             product.image = image || product.image;
             product.category = category || product.category;
-            product.countInStock = countInStock; // Directly update stock
+            product.countInStock = countInStock; 
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);
@@ -70,14 +65,13 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// @desc    Delete a product
-// @route   DELETE /api/products/:id
+
 const deleteProduct = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            await product.deleteOne(); // This permanently removes it from MongoDB
+            await product.deleteOne(); 
             res.json({ message: 'Product removed' });
         } else {
             res.status(404).json({ message: 'Product not found' });
@@ -87,11 +81,11 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-// Export all functions including the new updateProduct
+
 module.exports = { 
     getProducts, 
     createProduct, 
     getProductById, 
     deleteProduct,
-    updateProduct // <--- Don't forget to export this!
+    updateProduct 
 };
