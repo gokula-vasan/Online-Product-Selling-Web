@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Row, Col, Image, ListGroup, Card, Button, Form, Container, Badge, Spinner, Alert } from 'react-bootstrap';
 import api from '../services/api';
-import { FaShoppingCart, FaArrowLeft, FaStar, FaTruck, FaShieldAlt } from 'react-icons/fa';
+import { FaShoppingCart, FaArrowLeft, FaStar, FaTruck, FaShieldAlt, FaLightbulb } from 'react-icons/fa'; // Added FaLightbulb
 import { formatToINR } from '../utils/currencyUtils';
 
 const ProductPage = () => {
@@ -11,13 +11,26 @@ const ProductPage = () => {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // --- DATA SCIENCE ADDED: State for recommendations ---
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
+        // Fetch Main Product
         const { data } = await api.get(`/products/${id}`);
         setProduct(data);
+        
+        // --- DATA SCIENCE ADDED: Fetch Recommendations ---
+        try {
+          const { data: recData } = await api.get(`/products/${id}/recommendations`);
+          setRecommendations(recData);
+        } catch (recErr) {
+          console.error("Could not fetch recommendations");
+        }
+
         setLoading(false);
       } catch (err) {
         setError('Product not found or server error');
@@ -58,13 +71,10 @@ const ProductPage = () => {
   );
 
   return (
-    // INCREASED marginTop to 100px so it clears the Navbar completely
     <Container className="fade-in" style={{ marginTop: '100px', marginBottom: '50px' }}>
       
-      {/* --- BACK BUTTON (Updated for high visibility) --- */}
       <div className="mb-4">
         <Link to="/" className="text-decoration-none d-inline-block">
-          {/* Changed to variant="dark" for a solid, clear button */}
           <Button variant="dark" className="rounded-pill px-4 py-2 fw-bold shadow d-flex align-items-center hover-lift">
             <FaArrowLeft className="me-2" /> Back to Products
           </Button>
@@ -109,7 +119,6 @@ const ProductPage = () => {
               {product.description}
             </ListGroup.Item>
 
-            {/* Features Icons */}
             <ListGroup.Item className="border-0 px-0 bg-transparent mt-3">
                <div className="d-flex flex-column gap-2 text-muted small">
                   <div className="d-flex align-items-center"><FaTruck className="me-2 text-primary"/> Free Delivery on orders over {formatToINR(500)}</div>
@@ -181,8 +190,35 @@ const ProductPage = () => {
             </Card.Body>
           </Card>
         </Col>
-
       </Row>
+
+      {/* --- DATA SCIENCE ADDED: "Frequently Bought Together" UI --- */}
+      {recommendations.length > 0 && (
+        <div className="mt-5 pt-5 border-top">
+          <h4 className="fw-bold mb-4 text-dark">
+            <FaLightbulb className="text-warning me-2" /> Frequently Bought Together
+          </h4>
+          <Row className="g-4">
+            {recommendations.map((rec) => (
+              <Col key={rec._id} xs={6} md={4} lg={3}>
+                <Card className="h-100 border-0 shadow-sm rounded-4 hover-lift p-2">
+                  <Link to={`/product/${rec._id}`} className="text-decoration-none text-dark">
+                    <div className="text-center p-3">
+                      <Image src={rec.image} alt={rec.name} fluid style={{ maxHeight: '150px', objectFit: 'contain' }} />
+                    </div>
+                    <Card.Body className="text-center">
+                      <h6 className="fw-bold text-truncate mb-2">{rec.name}</h6>
+                      <h5 className="text-primary fw-bold mb-0">{formatToINR(rec.price)}</h5>
+                    </Card.Body>
+                  </Link>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
+      {/* --- END OF DATA SCIENCE UI --- */}
+
     </Container>
   );
 };

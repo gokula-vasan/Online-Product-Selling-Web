@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Container, Row, Col, Card, Modal, Form, Badge, Tabs, Tab, Pagination, InputGroup } from 'react-bootstrap';
-import { FaPlus, FaTrash, FaEdit, FaBoxOpen, FaDollarSign, FaShoppingCart, FaSearch, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEdit, FaBoxOpen, FaDollarSign, FaShoppingCart, FaSearch, FaCheckCircle, FaTimesCircle, FaChartLine } from 'react-icons/fa';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { formatToINR } from '../utils/currencyUtils';
 
 const AdminDashboard = () => {
-  const [key, setKey] = useState('products');
+  const [key, setKey] = useState('analytics'); // Set Analytics as default tab
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   
@@ -47,6 +48,41 @@ const AdminDashboard = () => {
       console.error("Error fetching orders", error);
     }
   };
+
+  // --- DATA SCIENCE: Dynamic Calculations for Charts ---
+  
+  // 1. Calculate Monthly Sales & Revenue from actual orders
+  const processMonthlyData = () => {
+    const monthlyData = {};
+    orders.forEach(order => {
+      // Get the month name (e.g., "Jan", "Feb")
+      const month = new Date(order.createdAt).toLocaleString('default', { month: 'short' });
+      if (!monthlyData[month]) {
+        monthlyData[month] = { month, revenue: 0, orders: 0 };
+      }
+      monthlyData[month].revenue += order.totalPrice;
+      monthlyData[month].orders += 1;
+    });
+    return Object.values(monthlyData);
+  };
+
+  // 2. Calculate Category Distribution from actual products
+  const processCategoryData = () => {
+    const catData = {};
+    products.forEach(product => {
+      if (!catData[product.category]) {
+        catData[product.category] = { name: product.category, value: 0 };
+      }
+      catData[product.category].value += 1;
+    });
+    return Object.values(catData);
+  };
+
+  const dynamicMonthlySales = processMonthlyData();
+  const dynamicCategoryData = processCategoryData();
+  const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ff6b6b'];
+
+  // --- End of Data Science Calculations ---
 
   const markAsDelivered = async (id) => {
     try {
@@ -144,7 +180,7 @@ const AdminDashboard = () => {
                 <div>
                   <h6 className="mb-0 opacity-75">Total Revenue</h6>
                   <h2 className="mb-0 fw-bold">
-                    {formatToINR(products.reduce((acc, item) => acc + Number(item.price), 0))}
+                    {formatToINR(orders.reduce((acc, order) => acc + (order.isPaid ? order.totalPrice : 0), 0))}
                   </h2>
                 </div>
               </Card.Body>
@@ -157,7 +193,7 @@ const AdminDashboard = () => {
                   <FaShoppingCart size={30} />
                 </div>
                 <div>
-                  <h6 className="mb-0 opacity-75">Active Orders</h6>
+                  <h6 className="mb-0 opacity-75">Total Orders</h6>
                   <h2 className="mb-0 fw-bold">{orders.length}</h2>
                 </div>
               </Card.Body>
@@ -173,8 +209,69 @@ const AdminDashboard = () => {
               onSelect={(k) => setKey(k)}
               className="mb-4 custom-tabs border-bottom-0 gap-3"
             >
+              
+              {/* --- DATA SCIENCE ANALYTICS TAB --- */}
+              <Tab eventKey="analytics" title={<span className="fw-bold"><FaChartLine className="me-2"/>Analytics</span>}>
+                <div className="p-3">
+                  <h4 className="fw-bold mb-4 text-dark">Data Science & Sales Analytics</h4>
+                  <Row className="g-4">
+                    {/* Line Chart for Sales Trend */}
+                    <Col lg={8}>
+                      <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
+                        <Card.Body className="p-4">
+                          <h6 className="fw-bold mb-4 text-secondary">Revenue & Order Trends</h6>
+                          {dynamicMonthlySales.length > 0 ? (
+                            <div style={{ width: '100%', height: 300 }}>
+                              <ResponsiveContainer>
+                                <LineChart data={dynamicMonthlySales}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                  <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                                  <YAxis axisLine={false} tickLine={false} />
+                                  <Tooltip contentStyle={{ borderRadius: '10px', border: 'none' }} />
+                                  <Legend />
+                                  <Line type="monotone" dataKey="revenue" stroke="#11998e" strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} name="Revenue (₹)" />
+                                  <Line type="monotone" dataKey="orders" stroke="#667eea" strokeWidth={3} name="Total Orders" />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          ) : (
+                            <p className="text-muted text-center mt-5">No order data available yet.</p>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                    
+                    {/* Pie Chart for Category Distribution */}
+                    <Col lg={4}>
+                      <Card className="border-0 shadow-sm rounded-4 h-100 bg-light">
+                        <Card.Body className="p-4">
+                          <h6 className="fw-bold mb-4 text-secondary">Products by Category</h6>
+                          {dynamicCategoryData.length > 0 ? (
+                            <div style={{ width: '100%', height: 300 }}>
+                              <ResponsiveContainer>
+                                <PieChart>
+                                  <Pie data={dynamicCategoryData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
+                                    {dynamicCategoryData.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip contentStyle={{ borderRadius: '10px', border: 'none' }} />
+                                  <Legend verticalAlign="bottom" height={36}/>
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                          ) : (
+                            <p className="text-muted text-center mt-5">No products available.</p>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </div>
+              </Tab>
+
+              {/* --- PRODUCTS TAB --- */}
               <Tab eventKey="products" title={<span className="fw-bold"><FaBoxOpen className="me-2"/>Products</span>}>
-                
                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 p-3 bg-light rounded-3">
                     <InputGroup style={{ maxWidth: '350px' }} className="shadow-sm rounded-pill overflow-hidden bg-white">
                         <InputGroup.Text className="bg-white border-0 ps-3"><FaSearch className="text-muted"/></InputGroup.Text>
@@ -250,6 +347,7 @@ const AdminDashboard = () => {
                 )}
               </Tab>
 
+              {/* --- ORDERS TAB --- */}
               <Tab eventKey="orders" title={<span className="fw-bold"><FaShoppingCart className="me-2"/>Orders</span>}>
                 <div className="table-responsive">
                     <Table hover className="align-middle mb-0">
@@ -305,6 +403,7 @@ const AdminDashboard = () => {
           </Card.Body>
         </Card>
 
+        {/* --- MODAL FOR ADD/EDIT PRODUCT --- */}
         <Modal show={showModal} onHide={() => setShowModal(false)} centered backdrop="static" size="lg">
           <Modal.Header closeButton className="border-0 pb-0">
             <Modal.Title className="fw-bold">{isEditing ? 'Edit Product' : 'Add New Product'}</Modal.Title>
@@ -329,7 +428,6 @@ const AdminDashboard = () => {
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    {/* CHANGED LABEL TO INR */}
                     <Form.Label className="small fw-bold text-uppercase text-muted">Price (₹)</Form.Label>
                     <Form.Control type="number" value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="bg-light border-0" required />
                   </Form.Group>
