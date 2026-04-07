@@ -14,10 +14,18 @@ connectDB();
 const app = express();
 
 // --- CORS CONFIGURATION (Fixes Network Error) ---
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 app.use(cors({
-    origin: 'http://localhost:5173', // Allow your React Frontend
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS')); 
+        }
+    },
     credentials: true // Allow cookies/headers if needed
 }));
+app.options('*', cors({ origin: allowedOrigins, credentials: true }));
 
 app.use(express.json()); 
 
